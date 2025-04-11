@@ -1,6 +1,7 @@
 import argparse
 import glob
 from pathlib import Path
+import json
 
 try:
     import open3d
@@ -20,7 +21,9 @@ from pcdet.models import build_network, load_data_to_gpu
 from pcdet.utils import common_utils
 
 
+
 class DemoDataset(DatasetTemplate):
+
     def __init__(self, dataset_cfg, class_names, training=True, root_path=None, logger=None, ext='.bin'):
         """
         Args:
@@ -39,6 +42,7 @@ class DemoDataset(DatasetTemplate):
 
         data_file_list.sort()
         self.sample_file_list = data_file_list
+
 
     def __len__(self):
         return len(self.sample_file_list)
@@ -96,7 +100,7 @@ def main():
             data_dict = demo_dataset.collate_batch([data_dict])
             load_data_to_gpu(data_dict)
             pred_dicts, _ = model.forward(data_dict)
-
+        
             V.draw_scenes(
                 points=data_dict['points'][:, 1:], ref_boxes=pred_dicts[0]['pred_boxes'],
                 ref_scores=pred_dicts[0]['pred_scores'], ref_labels=pred_dicts[0]['pred_labels']
@@ -105,7 +109,21 @@ def main():
             if not OPEN3D_FLAG:
                 mlab.show(stop=True)
 
-    logger.info('Demo done.')
+            # Create dictionary to store results
+            labels_3d = pred_dicts[0]['pred_labels'].cpu().numpy().tolist()
+            scores_3d = pred_dicts[0]["pred_scores"].cpu().numpy().tolist()
+            bboxes_3d = pred_dicts[0]["pred_boxes"].cpu().numpy().tolist()
+
+            results = {"labels_3d": labels_3d, "scores_3d": scores_3d, "bboxes_3d": bboxes_3d}
+
+            # Define output file name
+            output_file = "results.json"
+
+            # Save dictionary as JSON file
+            with open(output_file, "w") as f:
+                json.dump(results, f, indent=4)  # Pretty-print JSON with indentation
+
+                logger.info('Demo done.')
 
 
 if __name__ == '__main__':

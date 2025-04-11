@@ -30,15 +30,19 @@ class DataBaseSampler(object):
 
         for db_info_path in sampler_cfg.DB_INFO_PATH:
             db_info_path = self.root_path.resolve() / db_info_path
+            print(db_info_path)
             if not db_info_path.exists():
+                print(f"DB info file not found: {db_info_path}")
                 assert len(sampler_cfg.DB_INFO_PATH) == 1
                 sampler_cfg.DB_INFO_PATH[0] = sampler_cfg.BACKUP_DB_INFO['DB_INFO_PATH']
                 sampler_cfg.DB_DATA_PATH[0] = sampler_cfg.BACKUP_DB_INFO['DB_DATA_PATH']
                 db_info_path = self.root_path.resolve() / sampler_cfg.DB_INFO_PATH[0]
+                
                 sampler_cfg.NUM_POINT_FEATURES = sampler_cfg.BACKUP_DB_INFO['NUM_POINT_FEATURES']
-
+            
             with open(str(db_info_path), 'rb') as f:
                 infos = pickle.load(f)
+                print(db_info_path)
                 [self.db_infos[cur_class].extend(infos[cur_class]) for cur_class in class_names]
 
         for func_name, val in sampler_cfg.PREPARE.items():

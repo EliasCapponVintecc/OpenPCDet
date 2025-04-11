@@ -63,7 +63,7 @@ class RoIHeadTemplate(nn.Module):
         """
         if batch_dict.get('rois', None) is not None:
             return batch_dict
-            
+
         batch_size = batch_dict['batch_size']
         batch_box_preds = batch_dict['batch_box_preds']
         batch_cls_preds = batch_dict['batch_cls_preds']
@@ -199,22 +199,62 @@ class RoIHeadTemplate(nn.Module):
 
     def get_box_cls_layer_loss(self, forward_ret_dict):
         loss_cfgs = self.model_cfg.LOSS_CONFIG
-        rcnn_cls = forward_ret_dict['rcnn_cls']
-        rcnn_cls_labels = forward_ret_dict['rcnn_cls_labels'].view(-1)
-        if loss_cfgs.CLS_LOSS == 'BinaryCrossEntropy':
+        rcnn_cls = forward_ret_dict["rcnn_cls"]
+        # Ensure labels are flattened
+        rcnn_cls_labels = forward_ret_dict["rcnn_cls_labels"].view(-1)
+
+        if loss_cfgs.CLS_LOSS == "BinaryCrossEntropy":
+            # Ensure predictions are flattened for class-agnostic BCE
             rcnn_cls_flat = rcnn_cls.view(-1)
-            batch_loss_cls = F.binary_cross_entropy(torch.sigmoid(rcnn_cls_flat), rcnn_cls_labels.float(), reduction='none')
-            cls_valid_mask = (rcnn_cls_labels >= 0).float()
-            rcnn_loss_cls = (batch_loss_cls * cls_valid_mask).sum() / torch.clamp(cls_valid_mask.sum(), min=1.0)
-        elif loss_cfgs.CLS_LOSS == 'CrossEntropy':
-            batch_loss_cls = F.cross_entropy(rcnn_cls, rcnn_cls_labels, reduction='none', ignore_index=-1)
+
+            # ================== START MODIFICATION ==================
+
+            # Create a boolean mask for valid labels (0 or 1, excluding -1)
+            cls_valid_mask = rcnn_cls_labels >= 0
+
+            # Select only the predictions and labels where the label is valid
+            rcnn_cls_valid = rcnn_cls_flat[cls_valid_mask]
+            rcnn_cls_labels_valid = rcnn_cls_labels[cls_valid_mask]
+
+            # Handle the case where there are no valid foreground/background samples
+            # (e.g., all labels in the batch were -1)
+            if rcnn_cls_valid.numel() == 0:
+                # Assign a zero loss if no valid samples are found
+                rcnn_loss_cls = rcnn_cls_flat.new_tensor(0.0)
+            else:
+                # Apply sigmoid activation to the valid predictions
+                pred_scores_valid = torch.sigmoid(rcnn_cls_valid)
+
+                # Calculate Binary Cross Entropy loss ONLY on the valid samples
+                # Use 'sum' reduction because we will normalize manually
+                batch_loss_cls = F.binary_cross_entropy(
+                    pred_scores_valid,
+                    rcnn_cls_labels_valid.float(),  # Target must be float for BCE
+                    reduction="sum",
+                )
+
+                rcnn_loss_cls = batch_loss_cls / torch.clamp(cls_valid_mask.sum().float(), min=1.0)
+
+            # =================== END MODIFICATION ===================
+
+            # Note: The original code below this comment block is now replaced by the code above
+            # batch_loss_cls = F.binary_cross_entropy(torch.sigmoid(rcnn_cls_flat), rcnn_cls_labels.float(), reduction='none')
+            # cls_valid_mask = (rcnn_cls_labels >= 0).float()
+            # rcnn_loss_cls = (batch_loss_cls * cls_valid_mask).sum() / torch.clamp(cls_valid_mask.sum(), min=1.0)
+
+        elif loss_cfgs.CLS_LOSS == "CrossEntropy":
+            # This part remains the same, as F.cross_entropy handles ignore_index=-1 internally
+            batch_loss_cls = F.cross_entropy(rcnn_cls, rcnn_cls_labels, reduction="none", ignore_index=-1)
+            # We still need the mask to calculate the normalization factor correctly
             cls_valid_mask = (rcnn_cls_labels >= 0).float()
             rcnn_loss_cls = (batch_loss_cls * cls_valid_mask).sum() / torch.clamp(cls_valid_mask.sum(), min=1.0)
         else:
             raise NotImplementedError
 
-        rcnn_loss_cls = rcnn_loss_cls * loss_cfgs.LOSS_WEIGHTS['rcnn_cls_weight']
-        tb_dict = {'rcnn_loss_cls': rcnn_loss_cls.item()}
+        # Apply the final loss weight
+        rcnn_loss_cls = rcnn_loss_cls * loss_cfgs.LOSS_WEIGHTS["rcnn_cls_weight"]
+        # Prepare the tensorboard dictionary entry
+        tb_dict = {"rcnn_loss_cls": rcnn_loss_cls.item()}
         return rcnn_loss_cls, tb_dict
 
     def get_loss(self, tb_dict=None):

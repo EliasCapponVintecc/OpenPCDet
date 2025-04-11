@@ -1,5 +1,5 @@
 DATASET: "CustomDataset"
-DATA_PATH: "../data/custom"
+DATA_PATH: "../data/custom2"
 
 # For voxel based detectors such as SECOND, PV-RCNN and CenterPoint, the point cloud range and voxel size should follow:
 
@@ -13,8 +13,7 @@ POINT_CLOUD_RANGE: [-25, -40, -3, 55, 40, 2]
 #25/640 = 0.390625
 #25/256 = 0.09765625
 
-MAP_CLASS_TO_KITTI:
-  { "Car": "Car", "Pedestrian": "Pedestrian", "Cyclist": "Cyclist" }
+MAP_CLASS_TO_KITTI: { "Pedestrian": "Pedestrian" }
 
 DATA_SPLIT: { "train": train, "test": val }
 
@@ -35,7 +34,7 @@ DATA_AUGMENTOR:
       DB_INFO_PATH:
         - custom_dbinfos_train.pkl
       PREPARE: {}
-      SAMPLE_GROUPS: ["Car:1", "Pedestrian:1", "Cyclist:1"]
+      SAMPLE_GROUPS: ["Pedestrian:1"]
       NUM_POINT_FEATURES: 4
       DATABASE_WITH_FAKELIDAR: False
       REMOVE_EXTRA_WIDTH: [0.0, 0.0, 0.0]
