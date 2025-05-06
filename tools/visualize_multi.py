@@ -2,8 +2,8 @@ import argparse
 import glob
 import json
 from pathlib import Path
+
 import numpy as np
-import torch
 from cycler import cycler  # For cycling through colors
 
 try:
@@ -185,8 +185,7 @@ def parse_config():
     parser.add_argument(
         "--data_path",
         type=str,
-        # default="path/to/your/data/points/", # CHANGE THIS
-        required=True,
+        default="/home/vintecc/Vision.Mono/projects/Vision.PointCloudAI/submodules/OpenPcdet/data/custom/points",  # CHANGE THIS
         help="specify the point cloud data directory (e.g., the 'points' folder)",
     )
     parser.add_argument(
@@ -242,6 +241,51 @@ def load_predictions(json_path, logger):
     return predictions_by_frame
 
 
+def extract_model_identifier(full_path_str: str) -> str:
+    """Extracts the path components between 'output' and 'eval'.
+
+    Args:
+        full_path_str: The full path string.
+
+    Returns:
+        The extracted identifier string (e.g., "custom_models/pointrcnn/default/")
+        or None if the structure isn't found.
+    """
+    try:
+        p = Path(full_path_str)
+        parts = p.parts
+
+        # Find the indices of 'output' and 'eval'
+        output_index = parts.index("output")
+        eval_index = parts.index("eval")
+
+        # Ensure 'eval' comes after 'output'
+        if eval_index <= output_index:
+            logger.warning(f"'eval' does not appear after 'output' in path: {full_path_str}")
+            return None
+
+        # Extract the parts between 'output' (exclusive) and 'eval' (exclusive)
+        relevant_parts = parts[output_index + 1 : eval_index]
+
+        if not relevant_parts:
+            logger.warning(f"No path components found between 'output' and 'eval' in: {full_path_str}")
+            return None
+
+        # Join the relevant parts back into a string path segment
+        # Using Path ensures correct separator, as_posix() standardizes to '/'
+        # Add the trailing slash as per your examples
+        identifier = Path(*relevant_parts).as_posix() + "/"
+        return identifier
+
+    except ValueError:
+        # Handle cases where 'output' or 'eval' is not found in the path parts
+        logger.warning(f"Could not find 'output' or 'eval' component in path: {full_path_str}")
+        return None
+    except Exception as e:
+        logger.error(f"Error extracting identifier from path '{full_path_str}': {e}")
+        return None
+
+
 def main():
     args, cfg = parse_config()
     logger = common_utils.create_logger()
@@ -255,9 +299,13 @@ def main():
     # Cycle through default colors if more models than colors
     color_cycler = cycler(color=DEFAULT_MODEL_COLORS)
     model_colors = [item["color"] for _, item in zip(range(num_models), color_cycler)]
-    logger.info(f"Assigning colors to {num_models} models:")
+    logger.info("Ground Truth: RED (default color)")
+    logger.info(f"Assigning colors to {num_models} models [R,G,B]:")
+
     for i, path in enumerate(args.pred_json_paths):
-        logger.info(f"  Model {i + 1} ({Path(path).name}): {model_colors[i]}")
+        # Convert the original path string to a Path object
+        model_identifier = extract_model_identifier(path)
+        logger.info(f"  Model {i + 1} ({model_identifier}): {model_colors[i]}")
 
     # --- Load Predictions for Each Model ---
     all_predictions_by_frame_list = []  # List to hold prediction dicts, one per model

@@ -14,7 +14,7 @@ from torch import nn
 from train_utils.optimization import build_optimizer, build_scheduler
 from train_utils.train_utils import train_model
 
-from test import repeat_eval_ckpt
+# from test import repeat_eval_ckpt
 
 
 def parse_config():

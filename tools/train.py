@@ -31,7 +31,7 @@ def parse_config():
     parser.add_argument("--tcp_port", type=int, default=18888, help="tcp port for distrbuted training")
     parser.add_argument("--sync_bn", action="store_true", default=False, help="whether to use sync bn")
     parser.add_argument("--fix_random_seed", action="store_true", default=False, help="")
-    parser.add_argument("--ckpt_save_interval", type=int, default=1, help="number of training epochs")
+    parser.add_argument("--ckpt_save_interval", type=int, default=5, help="number of training epochs")
     parser.add_argument("--local_rank", type=int, default=None, help="local rank for distributed training")
     parser.add_argument("--max_ckpt_save_num", type=int, default=30, help="max number of saved checkpoint")
     parser.add_argument("--merge_all_iters_to_one_epoch", action="store_true", default=False, help="")
@@ -41,7 +41,7 @@ def parse_config():
 
     parser.add_argument("--max_waiting_mins", type=int, default=0, help="max waiting minutes")
     parser.add_argument("--start_epoch", type=int, default=0, help="")
-    parser.add_argument("--num_epochs_to_eval", type=int, default=0, help="number of checkpoints to be evaluated")
+    parser.add_argument("--num_epochs_to_eval", type=int, default=5, help="number of checkpoints to be evaluated")
     parser.add_argument("--save_to_file", action="store_true", default=False, help="")
 
     parser.add_argument(
@@ -253,7 +253,7 @@ def main():
         "**********************Start evaluation %s/%s(%s)**********************"
         % (cfg.EXP_GROUP_PATH, cfg.TAG, args.extra_tag)
     )
-    test_set, test_loader, sampler = build_dataloader(
+    test_set, sampler = build_dataloader(
         dataset_cfg=cfg.DATA_CONFIG,
         class_names=cfg.CLASS_NAMES,
         batch_size=args.batch_size,

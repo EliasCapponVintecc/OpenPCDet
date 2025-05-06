@@ -164,7 +164,7 @@ def main():
     logger.info("-----------------Quick Demo of OpenPCDet-------------------------")
     # --- Load predictions from JSON ---
     # pred_json_path = "/home/vintecc/Vision.Mono/projects/Vision.PointCloudAI/submodules/OpenPcdet/output/custom_models/pointrcnn_fine_tune/default/eval/epoch_10/val/default/result.json"
-    pred_json_path = "/home/vintecc/Vision.Mono/projects/Vision.PointCloudAI/submodules/OpenPcdet/output/cfgs/pointrcnn/multi_eval/eval/eval_PointRCNN_epoch_specified_ckpt/final_results/result.json"
+    pred_json_path = "/home/vintecc/Vision.Mono/projects/Vision.PointCloudAI/submodules/OpenPcdet/output/custom_models/pointrcnn/Office_Vintecc/eval/val/default/result.json"
 
     logger.info(f"Loading predictions from: {pred_json_path}")
     try:
