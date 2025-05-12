@@ -179,7 +179,7 @@ def parse_config():
     parser.add_argument(
         "--cfg_file",
         type=str,
-        default="cfgs/custom_models/pointrcnn.yaml",  # Using a common default
+        default="cfgs/custom_models/pointrcnn_iou_early_stopping.yaml",  # Using a common default
         help="specify the config for dataset loading parameters",
     )
     parser.add_argument(
@@ -430,6 +430,8 @@ def main():
             load_data_to_gpu(data_dict_batch)
 
             points_to_viz = data_dict_batch["points"][:, 1:]
+            #print dimensions
+            print(points_to_viz.shape)  # Should be (N, 4
 
             # Call visualizer with combined predictions and colors
             # **ASSUMES V.draw_scenes accepts ref_colors**
@@ -440,7 +442,8 @@ def main():
                     ref_scores=final_pred_scores,  # Combined prediction scores
                     ref_labels=final_pred_labels,  # Combined prediction labels
                     ref_colors=final_pred_colors,  # Assigned colors per prediction box
-                    gt_boxes=gt_boxes,  # Ground truth boxes (likely default color)
+                    gt_boxes=gt_boxes,
+                    point_colors= points_to_viz[:4] # Ground truth boxes (likely default color)
                     # Add gt_labels, gt_colors if your visualizer supports them
                 )
                 visualized_count += 1

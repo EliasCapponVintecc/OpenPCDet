@@ -1,6 +1,6 @@
-import mayavi.mlab as mlab
 import numpy as np
 import torch
+from mayavi import mlab
 
 box_colormap = [
     [1, 1, 1],
@@ -17,8 +17,7 @@ def check_numpy_to_torch(x):
 
 
 def rotate_points_along_z(points, angle):
-    """
-    Args:
+    """Args:
         points: (B, N, 3 + C)
         angle: (B), angle along z-axis, angle increases x ==> y
     Returns:
@@ -42,8 +41,7 @@ def rotate_points_along_z(points, angle):
 
 
 def boxes_to_corners_3d(boxes3d):
-    """
-        7 -------- 4
+    """7 -------- 4
        /|         /|
       6 -------- 5 .
       | |        | |
@@ -70,20 +68,20 @@ def boxes_to_corners_3d(boxes3d):
 
 
 def visualize_pts(pts, fig=None, bgcolor=(0, 0, 0), fgcolor=(1.0, 1.0, 1.0),
-                  show_intensity=False, size=(600, 600), draw_origin=True):
+                  show_intensity=True, size=(600, 600), draw_origin=True):
     if not isinstance(pts, np.ndarray):
         pts = pts.cpu().numpy()
     if fig is None:
         fig = mlab.figure(figure=None, bgcolor=bgcolor, fgcolor=fgcolor, engine=None, size=size)
 
     if show_intensity:
-        G = mlab.points3d(pts[:, 0], pts[:, 1], pts[:, 2], pts[:, 3], mode='point',
-                          colormap='gnuplot', scale_factor=1, figure=fig)
+        G = mlab.points3d(pts[:, 0], pts[:, 1], pts[:, 2], pts[:, 3], mode="point",
+                          colormap="gnuplot", scale_factor=1, figure=fig)
     else:
-        G = mlab.points3d(pts[:, 0], pts[:, 1], pts[:, 2], mode='point',
-                          colormap='gnuplot', scale_factor=1, figure=fig)
+        G = mlab.points3d(pts[:, 0], pts[:, 1], pts[:, 2], mode="point",
+                          colormap="gnuplot", scale_factor=1, figure=fig)
     if draw_origin:
-        mlab.points3d(0, 0, 0, color=(1, 1, 1), mode='cube', scale_factor=0.2)
+        mlab.points3d(0, 0, 0, color=(1, 1, 1), mode="cube", scale_factor=0.2)
         mlab.plot3d([0, 3], [0, 0], [0, 0], color=(0, 0, 1), tube_radius=0.1)
         mlab.plot3d([0, 0], [0, 3], [0, 0], color=(0, 1, 0), tube_radius=0.1)
         mlab.plot3d([0, 0], [0, 0], [0, 3], color=(1, 0, 0), tube_radius=0.1)
@@ -106,16 +104,16 @@ def draw_sphere_pts(pts, color=(0, 1, 0), fig=None, bgcolor=(0, 0, 0), scale_fac
         pts_color = np.zeros((pts.__len__(), 4), dtype=np.uint8)
         pts_color[:, 0:3] = color
         pts_color[:, 3] = 255
-        G = mlab.points3d(pts[:, 0], pts[:, 1], pts[:, 2], np.arange(0, pts_color.__len__()), mode='sphere',
+        G = mlab.points3d(pts[:, 0], pts[:, 1], pts[:, 2], np.arange(0, pts_color.__len__()), mode="sphere",
                           scale_factor=scale_factor, figure=fig)
-        G.glyph.color_mode = 'color_by_scalar'
-        G.glyph.scale_mode = 'scale_by_vector'
+        G.glyph.color_mode = "color_by_scalar"
+        G.glyph.scale_mode = "scale_by_vector"
         G.module_manager.scalar_lut_manager.lut.table = pts_color
     else:
-        mlab.points3d(pts[:, 0], pts[:, 1], pts[:, 2], mode='sphere', color=color,
-                      colormap='gnuplot', scale_factor=scale_factor, figure=fig)
+        mlab.points3d(pts[:, 0], pts[:, 1], pts[:, 2], mode="sphere", color=color,
+                      colormap="gnuplot", scale_factor=scale_factor, figure=fig)
 
-    mlab.points3d(0, 0, 0, color=(1, 1, 1), mode='cube', scale_factor=0.2)
+    mlab.points3d(0, 0, 0, color=(1, 1, 1), mode="cube", scale_factor=0.2)
     mlab.plot3d([0, 3], [0, 0], [0, 0], color=(0, 0, 1), line_width=3, tube_radius=None, figure=fig)
     mlab.plot3d([0, 0], [0, 3], [0, 0], color=(0, 1, 0), line_width=3, tube_radius=None, figure=fig)
     mlab.plot3d([0, 0], [0, 0], [0, 3], color=(1, 0, 0), line_width=3, tube_radius=None, figure=fig)
@@ -170,9 +168,8 @@ def draw_scenes(points, gt_boxes=None, ref_boxes=None, ref_scores=None, ref_labe
     return fig
 
 
-def draw_corners3d(corners3d, fig, color=(1, 1, 1), line_width=2, cls=None, tag='', max_num=500, tube_radius=None):
-    """
-    :param corners3d: (N, 8, 3)
+def draw_corners3d(corners3d, fig, color=(1, 1, 1), line_width=2, cls=None, tag="", max_num=500, tube_radius=None):
+    """:param corners3d: (N, 8, 3)
     :param fig:
     :param color:
     :param line_width:
@@ -181,18 +178,18 @@ def draw_corners3d(corners3d, fig, color=(1, 1, 1), line_width=2, cls=None, tag=
     :param max_num:
     :return:
     """
-    import mayavi.mlab as mlab
+    from mayavi import mlab
     num = min(max_num, len(corners3d))
     for n in range(num):
         b = corners3d[n]  # (8, 3)
 
         if cls is not None:
             if isinstance(cls, np.ndarray):
-                mlab.text3d(b[6, 0], b[6, 1], b[6, 2], '%.2f' % cls[n], scale=(0.3, 0.3, 0.3), color=color, figure=fig)
+                mlab.text3d(b[6, 0], b[6, 1], b[6, 2], "%.2f" % cls[n], scale=(0.3, 0.3, 0.3), color=color, figure=fig)
             else:
-                mlab.text3d(b[6, 0], b[6, 1], b[6, 2], '%s' % cls[n], scale=(0.3, 0.3, 0.3), color=color, figure=fig)
+                mlab.text3d(b[6, 0], b[6, 1], b[6, 2], "%s" % cls[n], scale=(0.3, 0.3, 0.3), color=color, figure=fig)
 
-        for k in range(0, 4):
+        for k in range(4):
             i, j = k, (k + 1) % 4
             mlab.plot3d([b[i, 0], b[j, 0]], [b[i, 1], b[j, 1]], [b[i, 2], b[j, 2]], color=color, tube_radius=tube_radius,
                         line_width=line_width, figure=fig)

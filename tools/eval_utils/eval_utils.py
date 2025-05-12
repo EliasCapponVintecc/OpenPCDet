@@ -144,6 +144,8 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
     )
 
     # --- Save results to JSON ---
+    if getattr(args, "infer_time", False):
+        logger.info("Average inference time: %.4f ms" % (infer_time_meter.avg))
     json_output_path = result_dir / "result.json"
     logger.info(f"Saving results to JSON: {json_output_path}")
     try:
@@ -164,29 +166,31 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
     result_str, result_dict = dataset.evaluation(
         det_annos, class_names, eval_metric=cfg.MODEL.POST_PROCESSING.EVAL_METRIC, output_path=final_output_dir
     )
-
-    logger.info(f"infer_time: {infer_time_meter}")
-    json_output_path = result_dir / "infer_time.json"
-    logger.info(f"Saving results to JSON: {json_output_path}")
-    Inference_time_per_example = ((infer_time_meter.avg * len(dataloader)) / len(dataloader.dataset))/1000
-    try:
-        with open(json_output_path, "w") as f:
-            # Use the custom NumpyEncoder
-            infer_time_dump = {
-                "avg_infer_time/batch": infer_time_meter.avg,
-                "Number of batches": len(dataloader),
-                "Number of datapoints": len(dataloader.dataset),
-                "sec_per_example": sec_per_example,
-                "Inference Time per example": Inference_time_per_example,
-                "Other": sec_per_example - Inference_time_per_example,
-                "GPU Name": torch.cuda.get_device_name(0),
-            }
-            json.dump(infer_time_dump, f, indent=4, cls=NumpyEncoder)
-        logger.info("Successfully saved results as JSON.")
-    except TypeError as e:
-        logger.error(f"JSON Serialization Error: {e}. Check if all numpy types are handled in NumpyEncoder.")
-    except Exception as e:
-        logger.error(f"Error writing JSON file: {e}")
+    if getattr(args, "infer_time", False):
+        logger.info("Average inference time: %.4f ms" % (infer_time_meter.avg))
+        logger.info("Average inference time per example: %.4f ms" % Inference_time_per_example)
+        logger.info("Average inference time per batch: %.4f ms" % infer_time_meter.avg)
+        json_output_path = result_dir / "infer_time.json"
+        logger.info(f"Saving results to JSON: {json_output_path}")
+        Inference_time_per_example = ((infer_time_meter.avg * len(dataloader)) / len(dataloader.dataset))/1000
+        try:
+            with open(json_output_path, "w") as f:
+                # Use the custom NumpyEncoder
+                infer_time_dump = {
+                    "avg_infer_time/batch": infer_time_meter.avg,
+                    "Number of batches": len(dataloader),
+                    "Number of datapoints": len(dataloader.dataset),
+                    "sec_per_example": sec_per_example,
+                    "Inference Time per example": Inference_time_per_example,
+                    "Other": sec_per_example - Inference_time_per_example,
+                    "GPU Name": torch.cuda.get_device_name(0),
+                }
+                json.dump(infer_time_dump, f, indent=4, cls=NumpyEncoder)
+            logger.info("Successfully saved results as JSON.")
+        except TypeError as e:
+            logger.error(f"JSON Serialization Error: {e}. Check if all numpy types are handled in NumpyEncoder.")
+        except Exception as e:
+            logger.error(f"Error writing JSON file: {e}")
 
     json_output_path = result_dir / "metrics.json"
     logger.info(f"Saving results to JSON: {json_output_path}")
