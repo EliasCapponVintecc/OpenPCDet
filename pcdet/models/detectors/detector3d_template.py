@@ -206,7 +206,7 @@ class Detector3DTemplate(nn.Module):
 
             box_preds = batch_dict['batch_box_preds'][batch_mask]
             src_box_preds = box_preds
-            
+
             if not isinstance(batch_dict['batch_cls_preds'], list):
                 cls_preds = batch_dict['batch_cls_preds'][batch_mask]
 
@@ -253,7 +253,7 @@ class Detector3DTemplate(nn.Module):
                     label_key = 'roi_labels' if 'roi_labels' in batch_dict else 'batch_pred_labels'
                     label_preds = batch_dict[label_key][index]
                 else:
-                    label_preds = label_preds + 1 
+                    label_preds = label_preds + 1
                 selected, selected_scores = model_nms_utils.class_agnostic_nms(
                     box_scores=cls_preds, box_preds=box_preds,
                     nms_config=post_process_cfg.NMS_CONFIG,
@@ -267,12 +267,12 @@ class Detector3DTemplate(nn.Module):
                 final_scores = selected_scores
                 final_labels = label_preds[selected]
                 final_boxes = box_preds[selected]
-                    
+
             recall_dict = self.generate_recall_record(
                 box_preds=final_boxes if 'rois' not in batch_dict else src_box_preds,
                 recall_dict=recall_dict, batch_index=index, data_dict=batch_dict,
                 thresh_list=post_process_cfg.RECALL_THRESH_LIST
-            )        
+            )
 
             record_dict = {
                 'pred_boxes': final_boxes,
@@ -364,13 +364,13 @@ class Detector3DTemplate(nn.Module):
 
         logger.info('==> Loading parameters from checkpoint %s to %s' % (filename, 'CPU' if to_cpu else 'GPU'))
         loc_type = torch.device('cpu') if to_cpu else None
-        checkpoint = torch.load(filename, map_location=loc_type)
+        checkpoint = torch.load(filename, map_location=loc_type,weights_only=False)
         model_state_disk = checkpoint['model_state']
         if not pre_trained_path is None:
             pretrain_checkpoint = torch.load(pre_trained_path, map_location=loc_type)
             pretrain_model_state_disk = pretrain_checkpoint['model_state']
             model_state_disk.update(pretrain_model_state_disk)
-            
+
         version = checkpoint.get("version", None)
         if version is not None:
             logger.info('==> Checkpoint trained from version: %s' % version)
