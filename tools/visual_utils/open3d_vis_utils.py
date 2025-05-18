@@ -57,8 +57,8 @@ def draw_scenes(
     vis = open3d.visualization.Visualizer()
     vis.create_window()
 
-    vis.get_render_option().point_size = 1.5
-    vis.get_render_option().background_color = np.zeros(3)
+    vis.get_render_option().point_size = 7
+    vis.get_render_option().background_color = np.ones(3)
 
     # draw origin
     if draw_origin:

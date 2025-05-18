@@ -57,7 +57,7 @@ from pcdet.models import load_data_to_gpu
 from pcdet.utils import common_utils
 
 
-# Corrected DemoDataset class (assuming it's defined as in your prompt)
+# Corrected DemoDataset class
 class DemoDataset(DatasetTemplate):
     def __init__(self, dataset_cfg, class_names, training=True, root_path=None, logger=None, ext=".bin"):
         """Args:
@@ -129,10 +129,7 @@ class DemoDataset(DatasetTemplate):
         file_path_str = self.sample_file_list[index]
         file_path = Path(file_path_str)
 
-        # --- Corrected frame_id ---
-        # Extract the frame_id (filename without extension) from this specific file path
         frame_id = file_path.stem
-        # --- End Correction ---
 
         # Load points based on the file extension
         try:
@@ -141,21 +138,16 @@ class DemoDataset(DatasetTemplate):
                 points = np.fromfile(file_path_str, dtype=np.float32).reshape(-1, 4)
             elif self.ext == ".npy":
                 points = np.load(file_path_str)
-                # Optional: Ensure points have at least 4 columns if needed downstream
-                # if points.shape[1] == 3:
-                #    points = np.hstack((points, np.zeros((points.shape[0], 1), dtype=points.dtype)))
+
 
             else:
-                # This case should ideally not be reached due to __init__ checks,
-                # but included for robustness.
+
                 raise NotImplementedError(f"Loading for extension '{self.ext}' is not implemented.")
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error loading file {file_path_str}: {e}")
             else:
                 print(f"Error loading file {file_path_str}: {e}")
-            # Decide how to handle errors: raise, return None, return empty data?
-            # For now, let's re-raise the exception.
             raise e
 
         # Create the dictionary for the data sample
@@ -383,6 +375,7 @@ def main():
             final_pred_labels = np.concatenate(frame_all_pred_labels, axis=0)
             final_pred_colors = np.concatenate(frame_all_pred_colors, axis=0)
             logger.debug(f"  Total combined predictions for frame {current_frame_id}: {len(final_pred_boxes)}")
+
 
         # --- Load GT boxes ---
         gt_boxes = None  # Initialize as None
