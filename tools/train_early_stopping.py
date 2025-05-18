@@ -485,6 +485,7 @@ def main():
                                 f"Early stopping triggered at epoch {trained_epoch} after {patience} epochs without improvement."
                             )
                             stop_training_flag = True  # Signal to stop
+                            break  # Exit the training loop
 
                     model.train()  # Set model back to training mode for next epoch
 
