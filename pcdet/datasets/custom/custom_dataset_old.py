@@ -131,11 +131,8 @@ class CustomDataset(DatasetTemplate):
 
         if kwargs["eval_metric"] == "kitti":
             ap_result_str, ap_dict = kitti_eval(eval_det_annos, eval_gt_annos, self.map_class_to_kitti)
-        if kwargs["eval_metric"] == "custom":
-            from ..custom import custom_eval
-            ap_result_str, ap_dict = custom_eval.get_official_eval_result(
-                gt_annos=eval_gt_annos, dt_annos=eval_det_annos, current_classes=class_names
-            )
+        else:
+            raise NotImplementedError
 
         return ap_result_str, ap_dict
 

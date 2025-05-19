@@ -526,7 +526,7 @@ def main():
             logger.info(f"Evaluating best model found by early stopping at epoch {best_epoch}: {best_ckpt_path}")
             # Load the best checkpoint before evaluation
             # model.load_params_from_file(str(best_ckpt_path), to_cpu=dist_train, logger=logger) # Load state dict directly is simpler
-            eval_single_ckpt(
+            eval_utils.eval_single_ckpt(
                 cfg,
                 model.module if dist_train else model,
                 val_loader,
@@ -546,7 +546,7 @@ def main():
                 last_ckpt_path = ckpt_list[-1]
                 logger.info(f"Evaluating last checkpoint: {last_ckpt_path}")
                 last_epoch_num = int(Path(last_ckpt_path).stem.split("_")[-1])
-                eval_single_ckpt(
+                eval_utils.eval_single_ckpt(
                     cfg,
                     model.module if dist_train else model,
                     val_loader,
